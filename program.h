@@ -21,7 +21,7 @@ bool initProgram(state_t *state,const char *fileName);
 
 void freeProgram(state_t *state);
 
-bool step(state_t *state,char instruction); 
+void step(state_t *state); 
 
 void runProgram(state_t *state);
 

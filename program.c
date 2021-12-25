@@ -23,55 +23,43 @@ void freeProgram(state_t *state) {
 }
 
 
-bool step(state_t *state,char instruction) {
+void step(state_t *state) {
+    char instruction = state->program[state->pc++];
     if (instruction == '>') {
         state->ptr++;
-        state->pc++;
     }
     else if (instruction == '<') {
         state->ptr--;
-        state->pc++;
     }
     else if (instruction == '+') {
         (*state->ptr)++;
-        state->pc++;
     }
     else if (instruction == '-') {
         (*state->ptr)--;
-        state->pc++;
     }
     else if (instruction == '.') {
         putchar(*state->ptr);
-        state->pc++;
     }
     else if (instruction == ',') {
         *state->ptr = getchar();
-        state->pc++;
     }
     else if (instruction == '[') {
-
+        unsigned int loopBegin = state->pc ;
+        unsigned int loopEnd = loopBegin;
+        for (int j = loopBegin; state->program[j] != ']'; j++) loopEnd++;
+        while (*state->ptr) {
+            while (state->program[state->pc] != ']') {
+                step(state);
+            }
+            state->pc = loopBegin;
+        }
+        state->pc = loopEnd;
     }
-    else {
-        return false;
-    }
-    return true;
 }
 
 void runProgram(state_t *state) {
-   for (size_t i = 0; i < state->programSize; i++)  {
-       if (state->program[i] == '[') {
-           while (*state->ptr) {
-               for (int j = i; state->program[j] != ']'; j++) {
-                   step(state,state->program[j]);
-               }
-           }
-           for (int j = i; state->program[j] != ']'; j++) i++;
-       }
-       else  {
-           step(state,state->program[i]);
-       }
-
-   }
+    while (state->pc < state->programSize)
+        step(state);
 }
 
 void debug(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
@@ -90,6 +78,7 @@ void debug(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
     for (size_t i = 0; i < state->programSize; i++)
         printf("%c",state->program[i]);
     printf("\nProgram Size: %zu\n", state->programSize);
+    printf("PC: %u\n",state->pc);
 }
 
 

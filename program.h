@@ -14,6 +14,7 @@ typedef struct State {
     int8_t *ptr;
     char *program;
     size_t programSize;
+    unsigned int pc;
 } state_t;
 
 bool initProgram(state_t *state,const char *fileName);
@@ -24,6 +25,6 @@ bool step(state_t *state,char instruction);
 
 void runProgram(state_t *state);
 
-void debug(state_t *state);
+void debug(state_t *state,unsigned int arrStart,unsigned int arrEnd);
 
 #endif

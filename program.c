@@ -62,7 +62,7 @@ void runProgram(state_t *state) {
         step(state);
 }
 
-void debug(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
+void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
     if (arrStart > ARRAY_SIZE -  1  || arrEnd > ARRAY_SIZE ) {
         printf("Error: Index out of array\n");
         exit(1);
@@ -109,4 +109,32 @@ static void readProgram(state_t *state, const char *fileName) {
         }
     } while(instruction != EOF);
     fclose(file);
+}
+
+void debug(state_t *state,const char *filename) {
+    printf("Entering debug mode:\n");
+    initProgram(state,filename);
+    char instruct[256];
+    do {
+        printf(">");
+        scanf("%s",&instruct);
+        if (strcmp(instruct,"info") == 0) 
+            printState(state,0,0); // TODO add option to show array
+        else if (strcmp(instruct,"step") == 0) { 
+            if (state->pc < state->programSize)
+                step(state);
+            else 
+                printf("Error: program has already ended\n");
+        }
+        else if (strcmp(instruct,"program") == 0) {
+            for (size_t i = 0; i < state->programSize; i++)
+                printf("%c",state->program[i]);
+            printf("\n");
+        }
+        else if (strcmp(instruct,"reset") == 0) 
+            initProgram(state,filename);
+        else if (strcmp(instruct,"help") == 0)
+            printf("help"); // TODO write help instructions
+    } while (strcmp(instruct,"exit") != 0);
+    freeProgram(state);
 }

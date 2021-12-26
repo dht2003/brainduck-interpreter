@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 typedef struct State {
@@ -25,6 +26,8 @@ void step(state_t *state);
 
 void runProgram(state_t *state);
 
-void debug(state_t *state,unsigned int arrStart,unsigned int arrEnd);
+void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd);
+
+void debug(state_t *state,const char *filename);
 
 #endif

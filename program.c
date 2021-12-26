@@ -6,6 +6,7 @@ static void readProgram(state_t *state, const char *fileName);
 bool initProgram(state_t *state,const char *fileName) {
     state->ptr = state->arr;
     state->pc = 0;
+    state->programStack = createStack(PROGRAM_STACK_SIZE);
     for (int i = 0; i < ARRAY_SIZE; i++)
         state->arr[i] = 0;
     state->programSize = fileSize(fileName);
@@ -44,16 +45,11 @@ void step(state_t *state) {
         *state->ptr = getchar();
     }
     else if (instruction == '[') {
-        unsigned int loopBegin = state->pc ;
-        unsigned int loopEnd = loopBegin;
-        for (int j = loopBegin; state->program[j] != ']'; j++) loopEnd++;
-        while (*state->ptr) {
-            while (state->program[state->pc] != ']') {
-                step(state);
-            }
-            state->pc = loopBegin;
-        }
-        state->pc = loopEnd;
+        push(state->programStack,state->pc);
+    }
+    else if (instruction == ']') {
+        if (*state->ptr)
+            state->pc =  pop(state->programStack);
     }
 }
 

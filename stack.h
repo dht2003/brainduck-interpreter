@@ -7,8 +7,8 @@
 
 typedef struct Stack {
     unsigned int *arr;
-    unsigned int capacity;
-    unsigned int top;
+    int capacity;
+    int top;
 } stack;
 
 stack *createStack(unsigned int capacity);
@@ -24,5 +24,7 @@ bool isEmpty(stack s);
 bool isFull(stack s);
 
 void freeStack(stack *s);
+
+void printStack(stack s);
 
 #endif 

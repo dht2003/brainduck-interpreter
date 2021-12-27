@@ -1,4 +1,4 @@
-#include <stack.h>
+#include "stack.h"
 
 
 stack *createStack(unsigned int capacity) {
@@ -18,7 +18,7 @@ stack *createStack(unsigned int capacity) {
 }
 
 bool isFull(stack s) {
-    return s.capacity - 1 = s.top;
+    return s.capacity - 1 == s.top;
 }
 
 bool isEmpty(stack s) {
@@ -52,4 +52,11 @@ void push(stack *s,unsigned int value) {
 void freeStack(stack *s) {
     free(s->arr);
     free(s);
+}
+
+void printStack(stack s) {
+    printf("Stack: ");
+    for (int i = 0; i <= s.top; i++) 
+        printf("%u ", s.arr[i]);
+    printf("\n");
 }

@@ -20,36 +20,51 @@ bool initProgram(state_t *state,const char *fileName) {
 }
 
 void freeProgram(state_t *state) {
+    freeStack(state->programStack);
     free(state->program);
 }
 
 
 void step(state_t *state) {
-    char instruction = state->program[state->pc++];
+    char instruction = state->program[state->pc];
     if (instruction == '>') {
         state->ptr++;
+        state->pc++;
     }
     else if (instruction == '<') {
         state->ptr--;
+        state->pc++;
     }
     else if (instruction == '+') {
         (*state->ptr)++;
+        state->pc++;
     }
     else if (instruction == '-') {
         (*state->ptr)--;
+        state->pc++;
     }
     else if (instruction == '.') {
         putchar(*state->ptr);
+        state->pc++;
     }
     else if (instruction == ',') {
         *state->ptr = getchar();
+        state->pc++;
     }
     else if (instruction == '[') {
-        push(state->programStack,state->pc);
+        if (*state->ptr) 
+            push(state->programStack,state->pc);
+        else  {
+            while (state->program[state->pc++] != ']');
+        }
+        state->pc++;
     }
     else if (instruction == ']') {
         if (*state->ptr)
-            state->pc =  pop(state->programStack);
+            state->pc =  pop(state->programStack) - 1;
+        else 
+            pop(state->programStack);
+        state->pc++;
     }
 }
 
@@ -70,11 +85,8 @@ void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
             printf("%d ",state->arr[i]);
         printf("\n");
     }
-    printf("Program: ");
-    for (size_t i = 0; i < state->programSize; i++)
-        printf("%c",state->program[i]);
-    printf("\nProgram Size: %zu\n", state->programSize);
-    printf("PC: %u\n",state->pc);
+    printStack(*state->programStack);
+    printf("Current Instruction: %c\n",state->program[state->pc]);
 }
 
 
@@ -113,24 +125,24 @@ void debug(state_t *state,const char *filename) {
     char instruct[256];
     do {
         printf(">");
-        scanf("%s",&instruct);
-        if (strcmp(instruct,"info") == 0) 
+        scanf("%255s",&instruct);
+        if (strcmp(instruct,"i") == 0) 
             printState(state,0,0); // TODO add option to show array
-        else if (strcmp(instruct,"step") == 0) { 
+        else if (strcmp(instruct,"s") == 0) { 
             if (state->pc < state->programSize)
                 step(state);
             else 
                 printf("Error: program has already ended\n");
         }
-        else if (strcmp(instruct,"program") == 0) {
+        else if (strcmp(instruct,"p") == 0) {
             for (size_t i = 0; i < state->programSize; i++)
                 printf("%c",state->program[i]);
             printf("\n");
         }
-        else if (strcmp(instruct,"reset") == 0) 
+        else if (strcmp(instruct,"r") == 0) 
             initProgram(state,filename);
-        else if (strcmp(instruct,"help") == 0)
+        else if (strcmp(instruct,"h") == 0)
             printf("help"); // TODO write help instructions
-    } while (strcmp(instruct,"exit") != 0);
+    } while (strcmp(instruct,"e") != 0);
     freeProgram(state);
 }

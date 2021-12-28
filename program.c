@@ -26,45 +26,39 @@ void freeProgram(state_t *state) {
 
 
 void step(state_t *state) {
-    char instruction = state->program[state->pc];
+    char instruction = state->program[state->pc++];
     if (instruction == '>') {
         state->ptr++;
-        state->pc++;
     }
     else if (instruction == '<') {
         state->ptr--;
-        state->pc++;
     }
     else if (instruction == '+') {
         (*state->ptr)++;
-        state->pc++;
     }
     else if (instruction == '-') {
         (*state->ptr)--;
-        state->pc++;
     }
     else if (instruction == '.') {
         putchar(*state->ptr);
-        state->pc++;
     }
     else if (instruction == ',') {
         *state->ptr = getchar();
-        state->pc++;
     }
     else if (instruction == '[') {
         if (*state->ptr) 
             push(state->programStack,state->pc);
         else  {
             while (state->program[state->pc++] != ']');
+            state->pc++;
         }
-        state->pc++;
     }
     else if (instruction == ']') {
         if (*state->ptr)
-            state->pc =  pop(state->programStack) - 1;
-        else 
+            state->pc =  peek(*state->programStack);
+        else  {
             pop(state->programStack);
-        state->pc++;
+        }
     }
 }
 

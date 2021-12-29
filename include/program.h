@@ -21,17 +21,27 @@ typedef struct State {
     stack *programStack;
 } state_t;
 
-bool initProgram(state_t *state,const char *fileName);
+enum tokens {
+  RIGHT_TOKEN = '>'
+, LEFT_TOKEN  = '<'
+, INCREMENT_TOKEN = '+'
+, DECREMENT_TOKEN = '-'
+, OUTPUT_TOKEN = '.'
+, INPUT_TOKEN = ','
+, LOOP_START_TOKEN = '['
+, LOOP_END_TOKEN = ']'};
+
+state_t* initProgram(const char *fileName);
 
 void freeProgram(state_t *state);
 
 void step(state_t *state); 
 
-void runProgram(state_t *state);
+void runProgram(const char *filename);
 
 void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd);
 
-void debug(state_t *state,const char *filename);
+void debug(const char *filename);
 
 
 #endif

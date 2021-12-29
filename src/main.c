@@ -2,10 +2,10 @@
 
 
 int main(int argc, char *argv[]) {
-    state_t state;
-    initProgram(&state,"test.bf");
-    runProgram(&state);
-    printState(&state,0,50);
-    freeProgram(&state);
-    //debug(&state,"test.bf");
+    // TODO : add debugger support
+    if (argc != 2) {
+        printf("Usage: brainfuck-interpreter [Input File]");
+        exit(EXIT_FAILURE);
+    }
+    runProgram(argv[1]);
 }

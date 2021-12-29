@@ -1,20 +1,17 @@
 #include <program.h>
+#include <util.h>
 
-enum tokens {
-  RIGHT_TOKEN = '>'
-, LEFT_TOKEN  = '<'
-, INCREMENT_TOKEN = '+'
-, DECREMENT_TOKEN = '-'
-, OUTPUT_TOKEN = '.'
-, INPUT_TOKEN = ','
-, LOOP_START_TOKEN = '['
-, LOOP_END_TOKEN = ']'};
 
-static size_t fileSize(const char *fileName);
+
 static void readProgram(state_t *state, const char *fileName);
 static unsigned int findMatch(state_t state,unsigned int start);
 
-bool initProgram(state_t *state,const char *fileName) {
+state_t* initProgram(const char *fileName) {
+    if (strcmp(get_filename_ext(fileName),"bf")) {
+        fprintf(stderr,"%s is not a brainfuck file\n",fileName);
+        exit(EXIT_FAILURE);
+    }
+    state_t *state = (state_t *) malloc(sizeof(state_t));
     state->ptr = state->arr;
     state->pc = 0;
     state->programStack = createStack(PROGRAM_STACK_SIZE);
@@ -23,16 +20,17 @@ bool initProgram(state_t *state,const char *fileName) {
     state->programSize = fileSize(fileName);
     state->program = malloc(state->programSize * sizeof(char));
     if (state->program == NULL) {
-        printf("Could not allocate memory for program\n");
-        return false;
+        fprintf(stderr,"Could not allocate memory for program\n");
+        exit(EXIT_FAILURE);
     }
     readProgram(state,fileName);
-    return true;
+    return state;
 }
 
 void freeProgram(state_t *state) {
     freeStack(state->programStack);
     free(state->program);
+    free(state);
 }
 
 
@@ -73,9 +71,11 @@ void step(state_t *state) {
     }
 }
 
-void runProgram(state_t *state) {
+void runProgram(const char *filename) {
+    state_t *state = initProgram(filename);
     while (state->pc < state->programSize)
         step(state);
+    freeProgram(state);
 }
 
 void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
@@ -95,24 +95,7 @@ void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
 }
 
 
-static size_t fileSize(const char *fileName) {
-    size_t numInstructions = 0;
-    FILE *file = fopen(fileName,"r");
-    if (file == NULL) {
-       fprintf(stderr, "Can't open file : %s\n",fileName); 
-       exit(EXIT_FAILURE);
-    }    
-    char instruction;
-    do {
-        instruction = (char) fgetc(file);
-        if (instruction == LEFT_TOKEN || instruction == RIGHT_TOKEN 
-        || instruction == INCREMENT_TOKEN || instruction == DECREMENT_TOKEN || instruction == LOOP_START_TOKEN || instruction == LOOP_END_TOKEN || instruction == OUTPUT_TOKEN || instruction == INPUT_TOKEN) {
-            numInstructions++;
-        }
-    } while(instruction != EOF);
-    fclose(file);
-    return numInstructions;
-}
+
 
 static void readProgram(state_t *state, const char *fileName) {
     FILE *file = fopen(fileName,"r");
@@ -132,9 +115,9 @@ static void readProgram(state_t *state, const char *fileName) {
     fclose(file);
 }
 
-void debug(state_t *state,const char *filename) {
+void debug(const char *filename) {
     printf("Entering debug mode:\n");
-    initProgram(state,filename);
+    state_t *state = initProgram(filename);
     char instruct[256];
     do {
         printf(">");
@@ -152,8 +135,6 @@ void debug(state_t *state,const char *filename) {
                 printf("%c",state->program[i]);
             printf("\n");
         }
-        else if (strcmp(instruct,"r") == 0) 
-            initProgram(state,filename);
         else if (strcmp(instruct,"h") == 0)
             printf("help"); // TODO write help instructions
     } while (strcmp(instruct,"e") != 0);

@@ -1,7 +1,18 @@
-#include "program.h"
+#include <program.h>
+
+enum tokens {
+  RIGHT_TOKEN = '>'
+, LEFT_TOKEN  = '<'
+, INCREMENT_TOKEN = '+'
+, DECREMENT_TOKEN = '-'
+, OUTPUT_TOKEN = '.'
+, INPUT_TOKEN = ','
+, LOOP_START_TOKEN = '['
+, LOOP_END_TOKEN = ']'};
 
 static size_t fileSize(const char *fileName);
 static void readProgram(state_t *state, const char *fileName);
+static unsigned int findMatch(state_t state,unsigned int start);
 
 bool initProgram(state_t *state,const char *fileName) {
     state->ptr = state->arr;
@@ -27,33 +38,33 @@ void freeProgram(state_t *state) {
 
 void step(state_t *state) {
     char instruction = state->program[state->pc++];
-    if (instruction == '>') {
+    if (instruction == RIGHT_TOKEN) {
         state->ptr++;
     }
-    else if (instruction == '<') {
+    else if (instruction == LEFT_TOKEN) {
         state->ptr--;
     }
-    else if (instruction == '+') {
+    else if (instruction == INCREMENT_TOKEN) {
         (*state->ptr)++;
     }
-    else if (instruction == '-') {
+    else if (instruction == DECREMENT_TOKEN) {
         (*state->ptr)--;
     }
-    else if (instruction == '.') {
+    else if (instruction == OUTPUT_TOKEN) {
         putchar(*state->ptr);
     }
-    else if (instruction == ',') {
+    else if (instruction == INPUT_TOKEN) {
         *state->ptr = getchar();
     }
-    else if (instruction == '[') {
+    else if (instruction == LOOP_START_TOKEN) {
         if (*state->ptr) 
             push(state->programStack,state->pc);
         else  {
-            while (state->program[state->pc++] != ']');
+            state->pc = findMatch(*state,state->pc);
             state->pc++;
         }
     }
-    else if (instruction == ']') {
+    else if (instruction == LOOP_END_TOKEN) {
         if (*state->ptr)
             state->pc =  peek(*state->programStack);
         else  {
@@ -69,8 +80,8 @@ void runProgram(state_t *state) {
 
 void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
     if (arrStart > ARRAY_SIZE -  1  || arrEnd > ARRAY_SIZE ) {
-        printf("Error: Index out of array\n");
-        exit(1);
+        fprintf(stderr, "Error: Index out of array\n");
+        exit(EXIT_FAILURE);
     }
     printf("Pointer:%lx\nPointed Value:%d\n", state->ptr - state->arr,*(state->ptr));
     if (arrStart != 0 || arrEnd != 0) {
@@ -87,11 +98,15 @@ void printState(state_t *state,unsigned int arrStart,unsigned int arrEnd) {
 static size_t fileSize(const char *fileName) {
     size_t numInstructions = 0;
     FILE *file = fopen(fileName,"r");
+    if (file == NULL) {
+       fprintf(stderr, "Can't open file : %s\n",fileName); 
+       exit(EXIT_FAILURE);
+    }    
     char instruction;
     do {
         instruction = (char) fgetc(file);
-        if (instruction == '<' || instruction == '>' 
-        || instruction == '+' || instruction == '-' || instruction == '[' || instruction == ']' || instruction == '.' || instruction == ',') {
+        if (instruction == LEFT_TOKEN || instruction == RIGHT_TOKEN 
+        || instruction == INCREMENT_TOKEN || instruction == DECREMENT_TOKEN || instruction == LOOP_START_TOKEN || instruction == LOOP_END_TOKEN || instruction == OUTPUT_TOKEN || instruction == INPUT_TOKEN) {
             numInstructions++;
         }
     } while(instruction != EOF);
@@ -101,12 +116,16 @@ static size_t fileSize(const char *fileName) {
 
 static void readProgram(state_t *state, const char *fileName) {
     FILE *file = fopen(fileName,"r");
+    if (file == NULL) {
+       fprintf(stderr, "Can't open file : %s\n",fileName); 
+       exit(EXIT_FAILURE);
+    }
     char instruction;
     char *index = state->program;
     do {
         instruction = (char) fgetc(file);
-        if (instruction == '<' || instruction == '>' 
-        || instruction == '+' || instruction == '-' || instruction == '[' || instruction == ']' || instruction == '.' || instruction == ',') {
+        if (instruction == LEFT_TOKEN || instruction == RIGHT_TOKEN 
+        || instruction == INCREMENT_TOKEN || instruction == DECREMENT_TOKEN || instruction == LOOP_START_TOKEN || instruction == LOOP_END_TOKEN || instruction == OUTPUT_TOKEN || instruction == INPUT_TOKEN) {
            *index++ = instruction;
         }
     } while(instruction != EOF);
@@ -126,7 +145,7 @@ void debug(state_t *state,const char *filename) {
             if (state->pc < state->programSize)
                 step(state);
             else 
-                printf("Error: program has already ended\n");
+                printf("program has already ended\n");
         }
         else if (strcmp(instruct,"p") == 0) {
             for (size_t i = 0; i < state->programSize; i++)
@@ -139,4 +158,18 @@ void debug(state_t *state,const char *filename) {
             printf("help"); // TODO write help instructions
     } while (strcmp(instruct,"e") != 0);
     freeProgram(state);
+}
+
+static unsigned int findMatch(state_t state,unsigned int start) {
+    int skips = 0;
+    for (unsigned int i = start; i < state.programSize; i++) {
+        if (state.program[i] == LOOP_END_TOKEN) {
+            if (skips == 0) return i;
+            else skips--;
+        }
+        else if (state.program[i] == LOOP_START_TOKEN) 
+            skips++;
+    }
+    fprintf(stderr,"Error: can't find a match\n");
+    exit(EXIT_FAILURE);
 }
